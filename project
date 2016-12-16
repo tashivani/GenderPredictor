@@ -1,35 +1,95 @@
 #!/usr/bin/python
+
+import re
 import csv
+import numpy as np
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from pandas import DataFrame
+
+FEMALE = 0
+MALE = 1
+countVec = CountVectorizer()
+classifier = MultinomialNB()
 
 
 def main():
-    filename = 'blog-gender-dataset.csv'
+    filename = 'blog-gender-dataset2.csv'
     dataSet = loadCsv(filename)
-    size = int(len(dataSet) * 0.70)
+    splitRatio = 0.70
+    splitSize = int(len(dataSet) * splitRatio)
 
-    train_dataSet = dataSet[0:size]
-    test_dataSet = dataSet[size:]
+    train_dataSet = dataSet[:splitSize]
+    test_dataSet = dataSet[splitSize:]
 
-    # separated = {'m': [], 'f': []}
-    # for row in train_dataSet:
-    #     separated[row[0]].append(row[1])
-
-    sexes = {}
-    for row in train_dataSet:
-        sex = row[0]
-        if sex in sexes:
-            sexes[sex] += 1
-        else:
-            sexes[sex] = 1
+    trainModelWith(train_dataSet)
+    predictUsing(test_dataSet)
 
 
-    # for i in range(size):
-    #     train_dataSet.append(dataSet[i])
+def trainModelWith(train_dataSet):
+    rows = []
+    index = []
+    count = 0
+
+    for data in train_dataSet:
+        rows.append({'text': data[1], 'gender': data[0]})
+        index.append(count)
+        count+=1
+
+    dataFrame = DataFrame(rows, index=index)
+    counts = countVec.fit_transform(dataFrame['text'].values)
+
+    targets = dataFrame['gender'].values
+    classifier.fit(counts, targets)
 
 
-    # print('Loaded data file {0} with {1} rows').format(filename, len(dataSet))
-    print(dataSet[0][0]) #contains the gender - m/f
-    # print(dataSet[0][1]) #contains the entire text
+def predictUsing(test_dataSet):
+    sample = ['This picture is so cute',
+            "I'm going for a football match",
+            "That was a good game though",
+            "life is beautiful",
+            "Haha lol I'm having a phone call with my mom and cooking!",
+            "Do you even lift man!",
+            "I love this bag!!!",
+            "I'm going to the gym",
+            "I'm voting for democratic government",
+            "Hey guys, what do you think about this http://www.youtube.com",
+            ]
+
+    texts = []
+    actualGender = []
+
+    for i in range(len(test_dataSet)):
+        actualGender.append(test_dataSet[i][0])
+        texts.append(test_dataSet[i][1])
+
+    test_counts = countVec.transform(texts)
+    probability = classifier.predict_proba(test_counts)
+    printResults(probability, texts, actualGender)
+
+
+def printResults(probability, textArr, actualGenderArr):
+    gender = {
+        FEMALE: 'Female',
+        MALE: 'Male'
+    }
+    successes = 0
+    # result = "\nGENDER\tPREDICTED GENDER\tPROBABILITY\t\tTEXT"
+
+    for i in range(len(textArr)):
+        predictedGender = FEMALE
+        if probability[i][FEMALE] < probability[i][MALE]:
+            predictedGender = MALE
+
+        if predictedGender == actualGenderArr[i]:
+            successes += 1
+        # result += "\n{0}{1:.0f}%: {2}".format(gender[found], probability[i][found] * 100, actualGender[i])
+    total = len(textArr)
+    accuracy = float(successes) / total * 100.00
+    print round(accuracy, 2)
+    # text_file = open("Output.txt", "w")
+    # text_file.write("The success rate is ",result)
+    # text_file.close()
 
 
 def loadCsv(filename):
@@ -37,33 +97,25 @@ def loadCsv(filename):
     dataSet = list(lines)
     newDataSet = []
     for i in range(len(dataSet)):
-        sex = dataSet[i][0].strip()
-        if sex is not '':
-            a = set(dataSet[i][1].split(' '))
-            a = [x for x in a if x not in [' ', '']]
-            row = [sex, a]
-            newDataSet.append(row)
+        if dataSet[i]:
+            gender = dataSet[i][0].strip()
+            gender = gender.lower()
+
+            if gender == 'm' or gender == 'f':
+                genderInt = FEMALE
+
+                if gender == 'm':
+                    genderInt = MALE
+
+                str = dataSet[i][1]
+                str = str.lower()
+                str = re.sub('\\n', ' ', str)
+                str = re.sub('\\t', ' ', str)
+                str = re.sub('\s+', ' ', str)
+                row = [genderInt, str]
+                newDataSet.append(row)
 
     return newDataSet
 
-
-
-def splitDataset(dataset, splitRatio):
-    trainSize = int(len(dataset) * splitRatio)
-    trainSet = []
-    copy = list(dataset)
-    while len(trainSet) < trainSize:
-        index = random.randrange(len(copy))
-        trainSet.append(copy.pop(index))
-    return [trainSet, copy]
-
-
-# separated = {}
-# for i in range(len(dataset)):
-#     vector = dataset[i]
-#     if (vector[-1] not in separated):
-#         separated[vector[-1]] = []
-#     separated[vector[-1]].append(vector)
-# return separated
 
 main()
