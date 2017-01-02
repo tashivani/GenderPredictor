@@ -2,7 +2,7 @@
 
 import re
 import csv
-import numpy as np
+import time
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from pandas import DataFrame
@@ -14,7 +14,7 @@ classifier = MultinomialNB()
 
 
 def main():
-    filename = 'blog-gender-dataset2.csv'
+    filename = 'blog-gender-dataset.csv'
     dataSet = loadCsv(filename)
     splitRatio = 0.70
     splitSize = int(len(dataSet) * splitRatio)
@@ -27,6 +27,8 @@ def main():
 
 
 def trainModelWith(train_dataSet):
+    print "> Training the Naive Bayes model on training data set..."
+
     rows = []
     index = []
     count = 0
@@ -37,24 +39,18 @@ def trainModelWith(train_dataSet):
         count+=1
 
     dataFrame = DataFrame(rows, index=index)
-    counts = countVec.fit_transform(dataFrame['text'].values)
+    beginTime = time.clock()
 
+    counts = countVec.fit_transform(dataFrame['text'].values) #does two things: it learns the vocabulary of the corpus and extracts word count features.
     targets = dataFrame['gender'].values
     classifier.fit(counts, targets)
 
+    endTime = time.clock()
+    print "> Training completed in {0:.3f} ms.\n".format((endTime-beginTime))
+
 
 def predictUsing(test_dataSet):
-    sample = ['This picture is so cute',
-            "I'm going for a football match",
-            "That was a good game though",
-            "life is beautiful",
-            "Haha lol I'm having a phone call with my mom and cooking!",
-            "Do you even lift man!",
-            "I love this bag!!!",
-            "I'm going to the gym",
-            "I'm voting for democratic government",
-            "Hey guys, what do you think about this http://www.youtube.com",
-            ]
+    print "> Performing gender classification on testing data..."
 
     texts = []
     actualGender = []
@@ -63,18 +59,25 @@ def predictUsing(test_dataSet):
         actualGender.append(test_dataSet[i][0])
         texts.append(test_dataSet[i][1])
 
+    beginTime = time.clock()
     test_counts = countVec.transform(texts)
     probability = classifier.predict_proba(test_counts)
+    endTime = time.clock()
+
+    print "> Prediction completed in {0:.3f} ms.\n".format((endTime-beginTime))
+
     printResults(probability, texts, actualGender)
 
 
 def printResults(probability, textArr, actualGenderArr):
+    print "> Printing result..."
+
     gender = {
         FEMALE: 'Female',
         MALE: 'Male'
     }
     successes = 0
-    # result = "\nGENDER\tPREDICTED GENDER\tPROBABILITY\t\tTEXT"
+    result = "\ntPREDICTED_GENDER: PROBABILITY, ACTUAL_GENDER, TEXT\n"
 
     for i in range(len(textArr)):
         predictedGender = FEMALE
@@ -83,13 +86,15 @@ def printResults(probability, textArr, actualGenderArr):
 
         if predictedGender == actualGenderArr[i]:
             successes += 1
-        # result += "\n{0}{1:.0f}%: {2}".format(gender[found], probability[i][found] * 100, actualGender[i])
+
+        result += "\n{0}:{1:.2f}%, {2}, {3}".format(gender[predictedGender], probability[i][predictedGender] * 100, gender[actualGenderArr[i]], textArr[i])
+
     total = len(textArr)
     accuracy = float(successes) / total * 100.00
-    print round(accuracy, 2)
-    # text_file = open("Output.txt", "w")
-    # text_file.write("The success rate is ",result)
-    # text_file.close()
+    print "\n# Predictions:\t\t\t\t{0}\n# Successful predictions:\t{1}\nAccuracy:\t\t\t\t\t{2}%".format(total, successes, round(accuracy, 2))
+    text_file = open("Output.txt", "w")
+    text_file.write(result)
+    text_file.close()
 
 
 def loadCsv(filename):
@@ -116,6 +121,5 @@ def loadCsv(filename):
                 newDataSet.append(row)
 
     return newDataSet
-
 
 main()
