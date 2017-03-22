@@ -1,5 +1,5 @@
 
-tPREDICTED_GENDER: PROBABILITY, ACTUAL_GENDER, TEXT
+PREDICTED_GENDER: PROBABILITY, ACTUAL_GENDER, TEXT
 
 Male:85.13%, Male, we get back to the ship and find that dad is feeling somewhat better, and he joins us for dinner. our next stop will be cozumel, and felix, our waiter, recommended stopping off at carlos'n charlie's, the local party bar. he told us that generally, by 3:00 pm or so, the girls start losing their tops, and the party continues on. he told us that the free tequila flows most of the day. well, that was enough for us! we scatter, and meet again at dizzy's for a little more jazz, and a final nightcap. little did we know that the shit was once again going to hit the fan in the morning...
 Male:85.10%, Male, the pokéwalker is pokemon soul silver and heart gold's gimmick; a pedometer that records your steps and allows you to build up your pokémon, capture additional pokémon and find items.over at bulbapedia they've determined that to unlock everything the pokéwalker has to offer, it's going to take 1,000 miles of walking. who needs to do that, when you can flat out cheat instead?after some closed-laboratory experiments in my apartment and some field tests, we've determined some effective ways to trick the pokéwalker into thinking you've been walking:
